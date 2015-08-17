@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html  ng-app="myApp">
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+
+  <body>
+    <div ng-controller="msgController">
+
+
+      <h1><%= title %></h1>
+      <p>Welcome to <%= title %></p>
+    </div>
+    <script src="angular/angular.js"></script>
+    <script>
+
+      angular.module('myApp', []).controller('msgController', function ($scope, Messages) {
+
+        $scope.readVsUnread = [];
+
+        $scope.getMessages = function () {
+
+          Messages.get().success(function (data) {
+            $scope.readVsUnread = data;
+          })
+        };
+
+
+      }).factory('Messages', function ($http) {
+
+        return {
+          get: function () {
+            return $http.get('/messages');
+          }
+        };
+
+      });
+
+      //console.log(angular.module('myApp'));
+
+    </script>
+  </body>
+</html>

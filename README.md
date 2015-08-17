@@ -1,0 +1,1 @@
+For some reason it works after two click on the "Get messages" button.

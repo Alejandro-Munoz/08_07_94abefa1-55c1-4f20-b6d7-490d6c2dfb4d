@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html >
+<head>
+    <meta charset="UTF-8">
+    <title>Chart</title>
+    <!--<script src="bower_components/jquery/dist/jquery.js"></script>-->
+    <script data-require="jquery@*" data-semver="2.1.4" src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+</head>
+
+<body>
+<section ng-app="myApp">
+    <div ng-controller="ImapController">
+        <h2>Get Messages</h2>
+        <button ng-click="getMessages()">Get Messages</button>
+        <div id="readvsUnread"  style="min-width: 310px; height: 400px; max-width: 600px; margin: 0 auto"></div>
+        <br/>
+        <br/>
+        <br/>
+
+        <div id="attvsNoAtt"  style="min-width: 310px; height: 400px; max-width: 600px; margin: 0 auto"></div>
+        <br/>
+        <br/>
+        <br/>
+
+        <div id="mimesDiv"  style="min-width: 310px; height: 400px; max-width: 600px; margin: 0 auto"></div>
+
+    </div>
+</section>
+<script src="/angular/angular.js"></script>
+
+<script>
+    var readP = 0;
+    var unreadP=0;
+    var withAtt =0;
+    var noAtt =0;
+
+    function getPercentage (data, total){
+        var percentage;
+        percentage = (data*100)/total;
+        return percentage;
+
+    }
+    angular.module('myApp', []).controller('ImapController', function ($scope, Messages) {
+        $scope.getMessages = function () {
+            Messages.get().success(function (data) {
+                var total = data.read + data.unread;
+                readP = getPercentage(data.read , total);
+                unreadP = getPercentage(data.unread, total);
+                withAtt = getPercentage(data.withAtt, total);
+                noAtt = getPercentage(data.noAtt, total);
+                createReadVsUnreadChart(readP,unreadP);
+                createWithAttVsNoAttChart(withAtt,noAtt);
+                createMimesChart(data.mimes);
+            })
+        };
+
+
+    }).factory('Messages', function ($http) {
+        return {
+            get: function () {
+                return $http.get('/messages');
+            }
+        };
+
+    });
+
+    function createMimesChart(mimesObj)
+    {
+        var total = 0;
+        var data = [];
+        for (prop in mimesObj){
+            total += mimesObj[prop];
+            obj = {
+                name:prop,
+                y: mimesObj[prop]*100/total
+            };
+            data.push(obj);
+        }
+        $('#mimesDiv').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'Mimes Division'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: "Messages",
+                colorByPoint: true,
+                data: data
+            }]
+        });
+    }
+    function createReadVsUnreadChart(read,unread)
+    {
+        $('#readvsUnread').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'Read vs Unread Messages'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: "Messages",
+                colorByPoint: true,
+                data: [{
+                    name: "Read",
+                    y: read
+                }, {
+                    name: "Unread",
+                    y: unread,
+                    sliced: true,
+                    selected: true
+                }]
+            }]
+        });
+    }
+    function createWithAttVsNoAttChart(val1,val2)
+    {
+        $('#attvsNoAtt').highcharts({
+            chart: {
+                plotBackgroundColor: null,
+                plotBorderWidth: null,
+                plotShadow: false,
+                type: 'pie'
+            },
+            title: {
+                text: 'With and Without Attachments Messages'
+            },
+            tooltip: {
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                        }
+                    }
+                }
+            },
+            series: [{
+                name: "Messages",
+                colorByPoint: true,
+                data: [{
+                    name: "With",
+                    y: val1
+                }, {
+                    name: "Without",
+                    y: val2,
+                    sliced: true,
+                    selected: true
+                }]
+            }]
+        });
+    }
+
+    //});
+</script>
+</body>
+</html>
